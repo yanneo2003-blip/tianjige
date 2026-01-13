@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>天机阁 | DivineChat Pro</title>
+    <!-- 基础依赖 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/iztro@2.0.5/dist/iztro.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
-
+    
+    <!-- Tailwind 配置：统一字体标准 -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Noto Serif SC', 'serif'],
+                        // 统一使用适用性最广的黑体标准，优先调用本地高性能字体
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+                        serif: ['"Noto Serif SC"', '"Songti SC"', '"SimSun"', 'serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
                     },
                     colors: {
                         stone: { 50:'#fafaf9', 100:'#f5f5f4', 200:'#e7e5e4', 300:'#d6d3d1', 400:'#a8a29e', 500:'#78716c', 800:'#292524', 900:'#1c1917' },
@@ -31,78 +34,70 @@
     </script>
     
     <style>
-        body { background-color: #fafaf9; color: #1c1917; -webkit-font-smoothing: antialiased; }
+        /* 全局样式与PC背景优化 */
+        body { background-color: #f0f0f0; color: #1c1917; -webkit-font-smoothing: antialiased; }
+        
+        /* PC端点阵背景纹理 */
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px); 
+            background-size: 24px 24px; opacity: 0.5; z-index: -1;
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 动画与过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        /* 输入框下划线动画 */
         .input-underline { position: relative; }
         .input-underline::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px; background-color: #1c1917; transition: width 0.3s ease; }
         .input-wrapper:focus-within .input-underline::after { width: 100%; }
         
+        /* 打字机光标 */
         .typing-dot { width: 4px; height: 4px; background-color: #a8a29e; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* Prose Styling Upgrade */
-        .prose p { margin-bottom: 1rem; line-height: 1.8; font-size: 0.95rem; color: #44403c; }
-        /* 确保气泡内最后一个元素没有下边距，保持紧凑 */
+        /* Prose Markdown 样式优化 */
+        .prose p { margin-bottom: 0.8rem; line-height: 1.7; font-size: 0.95rem; color: #44403c; text-align: justify; }
         .prose > :last-child { margin-bottom: 0; }
+        .prose h1, .prose h2, .prose h3 { font-family: "Songti SC", "SimSun", serif; color: #1c1917; margin-top: 1.2rem; margin-bottom: 0.6rem; font-weight: 700; border-bottom: 1px dashed #d6d3d1; padding-bottom: 0.2rem; }
         
-        .prose h1, .prose h2, .prose h3 { font-family: 'Noto Serif SC', serif; color: #1c1917; margin-top: 1.5rem; margin-bottom: 0.8rem; font-weight: 700; border-bottom: 1px dashed #d6d3d1; padding-bottom: 0.2rem; }
-        .prose ul { list-style-type: none; padding-left: 0; color: #57534e; }
+        /* 重点高亮 - 柔红底色 */
+        .prose strong { color: #991b1b; font-weight: 600; background-color: #fef2f2; padding: 0.1em 0.3em; border-radius: 0.2em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
         
-        /* 重点高亮效果 - 修复版 (圆角柔光) */
-        .prose strong { 
-            color: #7f1d1d; /* 深红色文字，增强对比 */
-            font-weight: 600; 
-            background-color: #fee2e2; /* 柔和的红色背景 */
-            padding: 0.1em 0.3em;
-            border-radius: 0.3em; /* 圆角，保证两头形状一致 */
-            box-decoration-break: clone; /* 换行时保持样式 */
-            -webkit-box-decoration-break: clone;
-        }
-
-        /* 引用块改为“卡片”样式 */
-        .prose blockquote { 
-            border: 1px solid #e7e5e4;
-            background: #ffffff;
-            padding: 1rem 1.2rem; 
-            border-radius: 12px; 
-            margin: 1.5rem 0; 
-            font-size: 0.9rem; 
-            color: #57534e;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-            font-family: 'Inter', sans-serif;
-        }
-        .prose blockquote p { margin-bottom: 0.5rem; }
-        /* 卡片内的标题特殊处理，不使用高亮背景 */
-        .prose blockquote strong { background: none; color: #b49b7e; padding: 0; font-weight: 700; } 
-
-        .prose hr { border-top: 1px solid #e7e5e4; margin: 2rem 0; width: 50%; margin-left: auto; margin-right: auto; }
+        /* 引用块 - 侧边卡片 */
+        .prose blockquote { border-left: 3px solid #d6d3d1; background: #fafaf9; padding: 0.5rem 1rem; margin: 1rem 0; font-size: 0.9rem; color: #57534e; border-radius: 0 8px 8px 0; }
+        .prose ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 1rem; }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col items-center">
 
-    <div id="app" class="w-full h-full max-w-2xl flex flex-col relative bg-stone-50 shadow-2xl shadow-stone-200/50">
+<!-- Body: PC端居中布局 -->
+<body class="h-screen w-screen overflow-hidden flex flex-col items-center justify-center">
+
+    <!-- App Container: PC端限制最大宽度+圆角+阴影 -->
+    <div id="app" class="w-full h-full md:max-w-4xl md:h-[90vh] md:rounded-3xl flex flex-col relative bg-stone-50 shadow-2xl shadow-stone-300/50 md:border md:border-white/50 overflow-hidden transition-all duration-300">
 
         <!-- Header -->
-        <header class="w-full px-6 py-5 flex justify-between items-center bg-stone-50/80 backdrop-blur-md z-30 sticky top-0 border-b border-stone-200/50">
+        <header class="w-full px-6 py-4 flex justify-between items-center bg-stone-50/90 backdrop-blur-md z-30 sticky top-0 border-b border-stone-200/50">
             <div class="flex items-center gap-3 group cursor-pointer" @click="returnToHome">
-                <div class="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-stone-50 shadow-sm transition-transform group-hover:scale-95">
-                    <span class="font-serif text-lg">天</span>
+                <div class="w-9 h-9 rounded-lg bg-stone-900 flex items-center justify-center text-stone-50 shadow-lg transition-transform group-hover:scale-95">
+                    <span class="font-serif text-xl">天</span>
                 </div>
                 <div class="flex flex-col">
-                    <h1 class="text-sm font-semibold tracking-wide text-stone-900">天机阁</h1>
-                    <span class="text-[0.6rem] text-stone-500 uppercase tracking-widest">DivineChat Pro</span>
+                    <h1 class="text-base font-bold tracking-wide text-stone-900 font-serif">天机阁</h1>
+                    <span class="text-[0.6rem] text-stone-500 uppercase tracking-widest font-sans">DivineChat Pro v2.1</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button @click="showHistory = true" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-200 transition-colors text-stone-400 hover:text-stone-800" title="历史记录">
+            <div class="flex items-center gap-2">
+                <button @click="showHistory = true" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-200 transition-colors text-stone-500 hover:text-stone-900" title="历史记录">
                     <i class="fa-solid fa-clock-rotate-left text-sm"></i>
                 </button>
-                <button @click="showSettings = true" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-200 transition-colors text-stone-400 hover:text-stone-800" title="设置">
+                <button @click="showSettings = true" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-200 transition-colors text-stone-500 hover:text-stone-900" title="设置">
                     <i class="fa-solid fa-sliders text-sm"></i>
                 </button>
             </div>
@@ -110,149 +105,174 @@
 
         <main class="flex-1 w-full relative overflow-hidden flex flex-col">
             
-            <!-- Input View -->
+            <!-- 1. 输入界面 (表单) -->
             <transition name="fade">
-                <div v-if="!chartGenerated" class="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 bg-stone-50 overflow-y-auto">
-                    <div class="w-full max-w-sm space-y-10 animate-fade-in-up">
+                <div v-if="!chartGenerated" class="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-stone-50 overflow-y-auto">
+                    <div class="w-full max-w-sm space-y-8 animate-fade-in-up">
                         <div class="text-center space-y-2">
-                            <h2 class="text-2xl font-serif text-stone-800">开启命理推演</h2>
+                            <h2 class="text-2xl font-serif font-bold text-stone-800">开启命理推演</h2>
                             <p class="text-xs text-stone-500 tracking-wide">真太阳时校正 · 紫微斗数 · 子平八字</p>
                         </div>
-                        <div class="space-y-8">
+                        <div class="space-y-6 bg-white p-6 rounded-2xl shadow-soft border border-stone-100">
+                            <!-- 姓名 -->
                             <div class="input-wrapper group">
-                                <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">姓名</label>
-                                <div class="input-underline"><input v-model="userInput.name" type="text" placeholder="请输入您的称呼" class="w-full bg-transparent py-3 text-lg text-stone-800 placeholder-stone-300 focus:outline-none transition-colors"></div>
+                                <label class="block text-xs font-bold text-stone-400 mb-1 uppercase tracking-wider">姓名</label>
+                                <div class="input-underline"><input v-model="userInput.name" type="text" placeholder="请输入您的称呼" class="w-full bg-transparent py-2 text-lg text-stone-800 placeholder-stone-300 focus:outline-none transition-colors"></div>
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-8">
+                            <!-- 地区选择 -->
+                            <div class="grid grid-cols-2 gap-6">
                                 <div class="input-wrapper group">
-                                    <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">出生省份</label>
+                                    <label class="block text-xs font-bold text-stone-400 mb-1 uppercase tracking-wider">出生省份</label>
                                     <div class="relative input-underline">
-                                        <select v-model="userInput.province" @change="handleProvinceChange" class="w-full bg-transparent py-3 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer">
+                                        <select v-model="userInput.province" @change="handleProvinceChange" class="w-full bg-transparent py-2 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer">
                                             <option v-for="(cities, prov) in chinaAreaData" :key="prov" :value="prov">{{ prov }}</option>
                                         </select>
-                                        <i class="fa-solid fa-chevron-down absolute right-0 top-4 text-xs text-stone-300 pointer-events-none"></i>
+                                        <i class="fa-solid fa-chevron-down absolute right-0 top-3 text-xs text-stone-300 pointer-events-none"></i>
                                     </div>
                                 </div>
                                 <div class="input-wrapper group">
-                                    <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">城市/地区</label>
+                                    <label class="block text-xs font-bold text-stone-400 mb-1 uppercase tracking-wider">城市/地区</label>
                                     <div class="relative input-underline">
-                                        <select v-model="userInput.city" class="w-full bg-transparent py-3 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer" :disabled="!userInput.province">
+                                        <select v-model="userInput.city" class="w-full bg-transparent py-2 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer" :disabled="!userInput.province">
                                             <option v-for="city in availableCities" :key="city.name" :value="city">{{ city.name }}</option>
                                         </select>
-                                        <i class="fa-solid fa-chevron-down absolute right-0 top-4 text-xs text-stone-300 pointer-events-none"></i>
+                                        <i class="fa-solid fa-chevron-down absolute right-0 top-3 text-xs text-stone-300 pointer-events-none"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-8">
+                            <!-- 时间选择 -->
+                            <div class="grid grid-cols-2 gap-6">
                                 <div class="input-wrapper group">
-                                    <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">公历日期</label>
-                                    <div class="input-underline"><input v-model="userInput.date" type="date" class="w-full bg-transparent py-3 text-base text-stone-800 focus:outline-none font-sans"></div>
+                                    <label class="block text-xs font-bold text-stone-400 mb-1 uppercase tracking-wider">公历日期</label>
+                                    <div class="input-underline"><input v-model="userInput.date" type="date" class="w-full bg-transparent py-2 text-base text-stone-800 focus:outline-none font-sans"></div>
                                 </div>
                                 <div class="input-wrapper group">
-                                    <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">出生时辰</label>
+                                    <label class="block text-xs font-bold text-stone-400 mb-1 uppercase tracking-wider">出生时辰</label>
                                     <div class="relative input-underline">
-                                        <select v-model="userInput.time" class="w-full bg-transparent py-3 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer font-serif">
+                                        <select v-model="userInput.time" class="w-full bg-transparent py-2 text-base text-stone-800 focus:outline-none appearance-none cursor-pointer font-serif">
                                             <option v-for="t in shichenOptions" :key="t.val" :value="t.val">
                                                 {{ t.name }} ({{ t.range }})
                                             </option>
                                         </select>
-                                        <i class="fa-solid fa-chevron-down absolute right-0 top-4 text-xs text-stone-300 pointer-events-none"></i>
+                                        <i class="fa-solid fa-chevron-down absolute right-0 top-3 text-xs text-stone-300 pointer-events-none"></i>
                                     </div>
                                 </div>
                             </div>
                             
+                            <!-- 性别 -->
                             <div class="input-wrapper group">
-                                <label class="block text-xs font-medium text-stone-400 mb-2 uppercase tracking-wider">性别</label>
-                                <div class="flex gap-4 py-3">
-                                    <button @click="userInput.gender = 'male'" :class="['text-sm transition-colors', userInput.gender === 'male' ? 'text-stone-900 font-semibold' : 'text-stone-300 hover:text-stone-500']">男 (乾造)</button>
+                                <label class="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-wider">性别</label>
+                                <div class="flex gap-4 py-1">
+                                    <button @click="userInput.gender = 'male'" :class="['text-sm transition-colors', userInput.gender === 'male' ? 'text-stone-900 font-bold' : 'text-stone-300 hover:text-stone-500']">男 (乾造)</button>
                                     <span class="text-stone-200">/</span>
-                                    <button @click="userInput.gender = 'female'" :class="['text-sm transition-colors', userInput.gender === 'female' ? 'text-stone-900 font-semibold' : 'text-stone-300 hover:text-stone-500']">女 (坤造)</button>
+                                    <button @click="userInput.gender = 'female'" :class="['text-sm transition-colors', userInput.gender === 'female' ? 'text-stone-900 font-bold' : 'text-stone-300 hover:text-stone-500']">女 (坤造)</button>
                                 </div>
                             </div>
 
-                            <div class="pt-6">
-                                <button @click="generateChart" class="w-full bg-stone-900 text-stone-50 py-4 rounded-xl text-sm font-medium hover:bg-stone-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3">
+                            <div class="pt-4">
+                                <button @click="generateChart" class="w-full bg-stone-900 text-stone-50 py-3.5 rounded-xl text-sm font-bold hover:bg-stone-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-3">
                                     <span>开始推演</span><i class="fa-solid fa-arrow-right text-xs opacity-50"></i>
                                 </button>
-                                <div class="mt-6 flex justify-center items-center gap-2 text-[0.6rem] text-stone-400"><i class="fa-solid fa-lock text-stone-300"></i><span>本地计算 · 隐私加密</span></div>
+                                <div class="mt-4 flex justify-center items-center gap-2 text-[0.6rem] text-stone-400"><i class="fa-solid fa-lock text-stone-300"></i><span>本地计算 · 隐私加密</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </transition>
 
-            <!-- Chat View -->
+            <!-- 2. 聊天界面 -->
             <transition name="fade">
                 <div v-if="chartGenerated" class="flex-1 flex flex-col h-full bg-stone-50">
-                    <div class="px-6 py-3 bg-stone-50/90 backdrop-blur border-b border-stone-100 flex justify-between items-center z-10">
+                    <!-- 顶部信息条 -->
+                    <div class="px-6 py-3 bg-stone-50/90 backdrop-blur border-b border-stone-100 flex justify-between items-center z-10 shadow-sm">
                         <div class="flex items-center gap-4 text-xs">
-                            <div class="flex flex-col"><span class="text-stone-400 scale-90 origin-left">八字</span><span class="font-mono text-stone-800 font-medium">{{ chartData.baziString }}</span></div>
+                            <div class="flex flex-col"><span class="text-stone-400 text-[10px] scale-90 origin-left">八字</span><span class="font-mono text-stone-800 font-bold">{{ chartData.baziString }}</span></div>
                             <div class="w-px h-6 bg-stone-200"></div>
-                            <div class="flex flex-col"><span class="text-stone-400 scale-90 origin-left">真太阳时</span><span class="font-mono text-stone-800">{{ chartData.trueSolarTime.split(' ')[1] }}</span></div>
+                            <div class="flex flex-col"><span class="text-stone-400 text-[10px] scale-90 origin-left">真太阳时</span><span class="font-mono text-stone-800">{{ chartData.trueSolarTime.split(' ')[1] }}</span></div>
                         </div>
-                        <div class="flex items-center gap-2 text-[0.65rem] text-gold font-medium bg-gold/10 px-2 py-1 rounded-md">
+                        <div class="flex items-center gap-2 text-[0.65rem] text-gold font-bold bg-gold/10 px-2 py-1 rounded-md">
                             <i class="fa-solid fa-location-arrow"></i><span>{{ userInput.city.name }}</span>
                         </div>
                     </div>
 
+                    <!-- 角色切换条 -->
                     <div class="px-6 pt-4 pb-2 bg-stone-50 z-10">
-                        <div class="flex p-1 bg-stone-100 rounded-lg overflow-x-auto no-scrollbar">
+                        <div class="flex p-1 bg-stone-200/50 rounded-lg overflow-x-auto no-scrollbar">
                             <button v-for="role in personas" :key="role.id" @click="switchPersona(role.id)"
-                                :class="['flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all duration-300 whitespace-nowrap', currentPersonaId === role.id ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400 hover:text-stone-600']">
+                                :class="['flex-1 py-1.5 px-3 rounded-md text-xs font-bold transition-all duration-300 whitespace-nowrap', currentPersonaId === role.id ? 'bg-white text-stone-900 shadow-sm scale-100' : 'text-stone-400 hover:text-stone-600 scale-95']">
                                 {{ role.name }}
                             </button>
                         </div>
                     </div>
 
-                    <div ref="chatRef" class="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar scroll-smooth">
-                        <!-- Chart Summary Card -->
+                    <!-- 消息列表 -->
+                    <div ref="chatRef" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6 no-scrollbar scroll-smooth">
+                        
+                        <!-- 命盘概要卡片 -->
                         <div v-if="chatHistory.length === 0" class="w-full bg-white rounded-2xl p-6 shadow-soft border border-stone-100 animate-fade-in-up">
                             <div class="flex items-center gap-3 mb-4"><div class="w-1 h-4 bg-stone-900 rounded-full"></div><h3 class="text-sm font-serif font-bold text-stone-900">命盘概要</h3></div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed text-stone-600">
-                                <div><p class="text-stone-400 mb-1 uppercase tracking-wider text-[0.6rem]">紫微命宫</p><p class="font-serif text-stone-800">{{ chartData.ziweiSummary }}</p></div>
-                                <div><p class="text-stone-400 mb-1 uppercase tracking-wider text-[0.6rem]">五行能量</p><p class="font-serif text-stone-800">{{ chartData.wuxingDetail }}</p></div>
+                                <div><p class="text-stone-400 mb-1 uppercase tracking-wider text-[0.6rem]">紫微命宫</p><p class="font-serif text-stone-800 font-bold">{{ chartData.ziweiSummary }}</p></div>
+                                <div><p class="text-stone-400 mb-1 uppercase tracking-wider text-[0.6rem]">五行能量</p><p class="font-serif text-stone-800 font-bold">{{ chartData.wuxingDetail }}</p></div>
                             </div>
                         </div>
 
-                        <!-- Messages -->
+                        <!-- 消息循环 -->
                         <div v-for="(msg, index) in chatHistory" :key="index" class="w-full animate-fade-in-up">
-                            <!-- User Message -->
-                            <div v-if="msg.role === 'user'" class="flex justify-end mb-2">
-                                <!-- 用户气泡：rounded-tr-sm (右上角微圆/尖) -->
-                                <div class="max-w-[85%] bg-stone-900 text-stone-50 px-5 py-3 rounded-2xl rounded-tr-sm shadow-md text-sm leading-relaxed">{{ msg.content }}</div>
-                            </div>
                             
-                            <!-- Master Message -->
-                            <div v-else class="flex gap-4">
-                                <div class="flex-shrink-0 flex flex-col items-center gap-2">
-                                    <div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-600 shadow-sm">
-                                        <i :class="['fa-solid text-xs', msg.icon || currentPersona.icon]"></i>
+                            <!-- 类型1：系统事件 (拍一拍效果) -->
+                            <div v-if="msg.role === 'event'" class="flex justify-center my-4">
+                                <span class="bg-stone-200/70 text-stone-500 text-[0.65rem] px-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
+                                    {{ msg.content }}
+                                </span>
+                            </div>
+
+                            <!-- 类型2：对话消息 -->
+                            <div v-else>
+                                <!-- 消息时间戳 (居中显示) -->
+                                <div class="flex justify-center mb-2">
+                                    <span class="text-[0.6rem] text-stone-300 font-mono select-none">{{ formatMsgTime(msg.timestamp) }}</span>
+                                </div>
+
+                                <!-- 用户消息 -->
+                                <div v-if="msg.role === 'user'" class="flex justify-end">
+                                    <div class="max-w-[85%] bg-stone-900 text-stone-50 px-5 py-3 rounded-2xl rounded-tr-xs shadow-md text-sm leading-relaxed tracking-wide">
+                                        {{ msg.content }}
                                     </div>
                                 </div>
-                                <div class="flex-1 space-y-1">
-                                    <div class="flex items-baseline gap-2">
-                                        <span class="text-xs font-semibold text-stone-900">{{ msg.name || currentPersona.name }}</span>
-                                        <span class="text-[0.6rem] text-stone-400">{{ msg.desc || currentPersona.desc }}</span>
+                                
+                                <!-- 大师消息 -->
+                                <div v-else class="flex gap-3 md:gap-4">
+                                    <div class="flex-shrink-0 flex flex-col items-center gap-2">
+                                        <div class="w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center text-stone-700 shadow-sm">
+                                            <i :class="['fa-solid text-sm', msg.icon || currentPersona.icon]"></i>
+                                        </div>
                                     </div>
-                                    <!-- 宗师气泡：rounded-tl-sm (左上角微圆/尖)，与用户气泡镜像对称 -->
-                                    <div class="bg-white border border-stone-200/60 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm text-sm text-stone-700 leading-7 prose prose-sm max-w-none">
-                                        <div v-html="renderMarkdown(msg.content)"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-baseline gap-2 mb-1">
+                                            <span class="text-xs font-bold text-stone-900">{{ msg.name || currentPersona.name }}</span>
+                                            <span class="text-[0.6rem] text-stone-400">{{ msg.desc || currentPersona.desc }}</span>
+                                        </div>
+                                        <div class="bg-white border border-stone-200/60 px-5 py-4 rounded-2xl rounded-tl-xs shadow-sm text-sm text-stone-700 leading-7 prose prose-sm max-w-none">
+                                            <div v-html="renderMarkdown(msg.content)"></div>
+                                            <div v-if="msg.isTyping" class="flex gap-1 py-1"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+                                        </div>
                                     </div>
-                                    <div v-if="msg.isTyping" class="flex gap-1 py-2"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
                                 </div>
                             </div>
                         </div>
                         <div class="h-12"></div>
                     </div>
 
-                    <div class="absolute bottom-6 left-0 right-0 px-6 z-20">
-                        <div class="max-w-2xl mx-auto bg-white/80 backdrop-blur-xl rounded-2xl shadow-float border border-white/50 p-2 flex items-center gap-2">
-                            <input v-model="userMessage" @keyup.enter="handleSend" type="text" :placeholder="isLoading ? '阁主正在记录...' : `向${currentPersona.name}提问...`" :disabled="isLoading" class="flex-1 bg-transparent px-4 py-3 text-sm text-stone-800 placeholder-stone-400 focus:outline-none">
-                            <button @click="handleSend" :disabled="isLoading || !userMessage.trim()" class="w-10 h-10 rounded-xl bg-stone-900 text-stone-50 flex items-center justify-center hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                                <i v-if="!isLoading" class="fa-solid fa-arrow-up text-sm"></i>
-                                <i v-else class="fa-solid fa-spinner fa-spin text-sm"></i>
+                    <!-- 输入区域 -->
+                    <div class="absolute bottom-6 left-0 right-0 px-4 md:px-8 z-20">
+                        <div class="max-w-3xl mx-auto bg-white/90 backdrop-blur-xl rounded-2xl shadow-float border border-stone-200 p-2 flex items-center gap-2 transition-all focus-within:ring-2 focus-within:ring-stone-200">
+                            <input v-model="userMessage" @keyup.enter="handleSend" type="text" :placeholder="isLoading ? '阁主正在记录...' : `向${currentPersona.name}提问 (支持询问'今年'、'现在')...`" :disabled="isLoading" class="flex-1 bg-transparent px-4 py-3 text-sm text-stone-800 placeholder-stone-400 focus:outline-none">
+                            <button @click="handleSend" :disabled="isLoading || !userMessage.trim()" class="w-10 h-10 rounded-xl bg-stone-900 text-stone-50 flex items-center justify-center hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md">
+                                <i v-if="!isLoading" class="fa-solid fa-paper-plane text-xs"></i>
+                                <i v-else class="fa-solid fa-spinner fa-spin text-xs"></i>
                             </button>
                         </div>
                     </div>
@@ -261,8 +281,8 @@
 
         </main>
 
-        <!-- Settings Modal -->
-        <div v-if="showSettings" class="absolute inset-0 z-50 bg-stone-100/40 backdrop-blur-sm flex items-center justify-center p-6">
+        <!-- 设置弹窗 -->
+        <div v-if="showSettings" class="absolute inset-0 z-50 bg-stone-900/20 backdrop-blur-sm flex items-center justify-center p-6">
             <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl border border-stone-100 transform transition-all animate-fade-in-up">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-lg font-serif font-bold text-stone-900">系统设置</h3>
@@ -275,14 +295,14 @@
                     <div v-if="verifyStatus" :class="['text-xs px-4 py-3 rounded-lg flex items-center gap-2', verifyStatus.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700']"><i :class="['fa-solid', verifyStatus.ok ? 'fa-check' : 'fa-exclamation-circle']"></i>{{ verifyStatus.msg }}</div>
                 </div>
                 <div class="mt-8 flex gap-3">
-                    <button @click="runTest" :disabled="isVerifying" class="flex-1 py-3 border border-stone-200 rounded-xl text-xs font-medium text-stone-600 hover:bg-stone-50 transition-colors">{{ isVerifying ? '连接中...' : '测试连接' }}</button>
-                    <button @click="saveSettings" class="flex-1 py-3 bg-stone-900 text-stone-50 rounded-xl text-xs font-medium hover:bg-stone-800 transition-colors">保存配置</button>
+                    <button @click="runTest" :disabled="isVerifying" class="flex-1 py-3 border border-stone-200 rounded-xl text-xs font-bold text-stone-600 hover:bg-stone-50 transition-colors">{{ isVerifying ? '连接中...' : '测试连接' }}</button>
+                    <button @click="saveSettings" class="flex-1 py-3 bg-stone-900 text-stone-50 rounded-xl text-xs font-bold hover:bg-stone-800 transition-colors">保存配置</button>
                 </div>
             </div>
         </div>
 
-        <!-- History Modal -->
-        <div v-if="showHistory" class="absolute inset-0 z-50 bg-stone-100/40 backdrop-blur-sm flex items-center justify-center p-6">
+        <!-- 历史记录弹窗 -->
+        <div v-if="showHistory" class="absolute inset-0 z-50 bg-stone-900/20 backdrop-blur-sm flex items-center justify-center p-6">
             <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl border border-stone-100 transform transition-all animate-fade-in-up flex flex-col max-h-[80vh]">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-serif font-bold text-stone-900">推演记录</h3>
@@ -290,9 +310,7 @@
                 </div>
                 
                 <div class="flex-1 overflow-y-auto space-y-3 pr-1 -mr-2 scroll-smooth">
-                    <div v-if="sessions.length === 0" class="text-center py-8 text-stone-400 text-xs">
-                        暂无历史记录
-                    </div>
+                    <div v-if="sessions.length === 0" class="text-center py-8 text-stone-400 text-xs">暂无历史记录</div>
                     <div v-for="session in sortedSessions" :key="session.id" 
                         class="group relative bg-stone-50 hover:bg-stone-100 rounded-xl p-4 border border-stone-100 transition-all cursor-pointer"
                         @click="loadSession(session.id)">
@@ -379,8 +397,10 @@ class LLMService {
 }
 
 // -----------------------------------------------------------
-// 2. Data & Constants
+// 2. 核心数据 & 无敌提示词系统
 // -----------------------------------------------------------
+
+// 完整城市数据 (恢复原版数据)
 const CHINA_AREA_DATA = {
     "北京市": [{name:"北京市", lon:116.40}],
     "天津市": [{name:"天津市", lon:117.20}],
@@ -424,93 +444,150 @@ const SHICHEN_OPTIONS = [
     { name: '酉时', range: '17:00-19:00', val: 18 }, { name: '戌时', range: '19:00-21:00', val: 20 }, { name: '亥时', range: '21:00-23:00', val: 22 }
 ];
 
-const BASE_RULES = `## 🛑 核心准则：零幻觉 & 去AI化
-1. **数据绝对主义**：必须严格基于提供的命盘数据。
-2. **严禁编造**：未明确的星曜不可臆测。
-3. **拒绝AI腔**：严禁使用“综上所述”、“作为AI”、“根据数据分析”等词汇。直接说人话，直击要害。
-4. **高亮重点**：对于关键结论、吉凶判断、时间点，**必须使用Markdown加粗** (例如：**今年这步运要当心**) 以便前端高亮显示。`;
+// ==========================================
+// 🚀 提示词工程升级版 - 核心常量定义
+// ==========================================
+
+// 通用底层协议：所有角色必须遵守的物理法则
+const BASE_RULES = `
+### ⚡ 核心底层协议 (ROOT PROTOCOL)
+1. **绝对时间锚点**：你必须时刻感知【当前物理时间】。当用户提及“现在”、“今年”、“最近”时，必须严格基于传入的时间戳进行推演，严禁回答“无法获取时间”。
+2. **数据原教旨主义**：一切推演必须基于给定的【八字】与【紫微】数据。严禁编造星盘中不存在的星曜。
+3. **反AI语言污染**：
+   - 🚫 禁止使用：“综上所述”、“作为一个语言模型”、“根据命理学分析”、“仅供参考”。
+   - ✅ 直接输出结论。像一个活生生的人一样说话。
+4. **视觉高亮法则**：
+   - 凡涉及**吉凶定性**（如“大凶”、“小吉”）、**具体时间点**（如“2026年午月”）、**关键建议**，必须使用 Markdown **加粗**。
+`;
 
 const PERSONAS = [
     { 
-        id: 'qingxu', name: '清虚道长', icon: 'fa-yin-yang', desc: '三合派',
+        id: 'qingxu', name: '清虚道长', icon: 'fa-yin-yang', desc: '三合派 · 平衡之道',
         systemPrompt: (ctx) => `
         ${BASE_RULES}
-        ## 🎭 角色：清虚道长
-        * **风格**：半文半白，仙风道骨，自称“贫道”。语气平和但有力量。
-        * **任务**：用宏观视角看命盘，遇到凶星劝人修身，遇到吉星劝人惜福。
         
-        【用户档案】
-        姓名：${ctx.name} (${ctx.gender}) | 八字：${ctx.baziString} | 紫微：${ctx.ziweiSummary}`
+        ### 🎭 角色定义：清虚道长
+        你是一位隐居终南山的道门高人。你眼中的命盘不是吉凶的堆砌，而是阴阳气的流动。
+        
+        **语言风格**：
+        - 半文半白，语气淡然，透着悲悯。
+        - 常用词：贫道、施主、造化、盈虚、气数。
+        - 句式：喜欢用对仗或排比，收尾常带叹息或劝诫。
+        
+        **推演逻辑**：
+        1. **观气象**：先看八字强弱与紫微命宫主星，定格局高低。
+        2. **定流年**：结合【当前时间：${ctx.currentTime}】，分析当下天干地支对命主五行的生克。
+        3. **劝修心**：遇到凶局，不言破，而言“修”；遇到吉局，不言喜，而言“守”。
+        
+        **当前任务**：
+        用户是 ${ctx.name} (${ctx.gender})，生于 ${ctx.baziString}。
+        当前时间是 **${ctx.currentTime}**。
+        
+        请以道家出世的智慧，解答施主的困惑。若问近况，务必结合当下的年、月干支论述。
+        `
     },
     { 
-        id: 'xuanji', name: '玄机子', icon: 'fa-cube', desc: '飞星四化',
+        id: 'xuanji', name: '玄机子', icon: 'fa-cube', desc: '飞星四化 · 逻辑推演',
         systemPrompt: (ctx) => `
         ${BASE_RULES}
-        ## 🎭 角色：玄机子
-        * **风格**：极度干练、冷峻，像严谨的数学家。只谈逻辑和因果，不带感情。
-        * **任务**：分析禄权科忌的飞伏。关注生年四化：${ctx.sihua}。
         
-        【用户档案】
-        姓名：${ctx.name} | 八字：${ctx.baziString} | 生年四化：${ctx.sihua}`
+        ### 🎭 角色定义：玄机子
+        你是一位极度理性的命理极客，紫微斗数飞星派传人。你认为命运是一组精密的数学公式。
+        
+        **语言风格**：
+        - 极度干练，冷峻，像外科医生或程序员。
+        - 拒绝废话，只讲因果。
+        - 常用词：化忌、冲、照、禄权科、宫位重叠、触发。
+        - **严禁**使用感性词汇（如“遗憾”、“开心”），只描述能量状态。
+        
+        **推演逻辑**：
+        1. **锁定坐标**：依据【当前时间：${ctx.currentTime}】，精确定位流年命宫、流月命宫。
+        2. **追踪四化**：分析生年四化(${ctx.sihua})与流年四化的碰撞。
+        3. **逻辑归因**：格式必须是“因为A宫化忌冲B宫，所以导致C结果”。
+        
+        **当前任务**：
+        用户 ${ctx.name}，八字 ${ctx.baziString}。
+        现在是 **${ctx.currentTime}**。请像解剖手术一样，拆解其当下的运势结构。
+        `
     },
     { 
-        id: 'tiekou', name: '铁口刘', icon: 'fa-gavel', desc: '盲派江湖',
+        id: 'tiekou', name: '铁口刘', icon: 'fa-gavel', desc: '盲派江湖 · 直断吉凶',
         systemPrompt: (ctx) => `
         ${BASE_RULES}
-        ## 🎭 角色：铁口刘
-        * **风格**：江湖气重，大白话，冲，直来直去。喜欢用反问句，甚至带点刺。
-        * **任务**：直接断结论。不要过程，只要结果。“这事能成”、“这步运你要栽”。
         
-        【用户档案】
-        姓名：${ctx.name} | 八字：${ctx.baziString}`
+        ### 🎭 角色定义：铁口刘
+        你是在天桥下摆摊三十年的盲派算命师。你不在乎理论，只在乎准不准。
+        
+        **语言风格**：
+        - 大白话，甚至带点江湖黑话。脾气冲，说话直，不留情面。
+        - 喜欢用反问句：“你以为这钱好赚？”“这坎儿你能过去？”
+        - 常用词：破财、见血、犯小人、桃花劫、铁定、跑不了。
+        
+        **推演逻辑**：
+        1. **一针见血**：不讲过程，直接把结果甩在用户脸上。
+        2. **当下验证**：看【当前时间：${ctx.currentTime}】，直接断这几天或者这几个月会发生什么破事或好事。
+        3. **警告**：哪怕是好事，也要警告其中隐藏的坑。
+        
+        **当前任务**：
+        给 ${ctx.name} 这一卦算明白。别整虚的。
+        现在时间 **${ctx.currentTime}**，给我看准了断！
+        `
     },
     { 
-        id: 'alice', name: 'Alice林', icon: 'fa-heart', desc: '现代心理',
+        id: 'alice', name: 'Alice林', icon: 'fa-heart', desc: '现代心理 · 疗愈成长',
         systemPrompt: (ctx) => `
         ${BASE_RULES}
-        ## 🎭 角色：Alice林
-        * **风格**：温柔、共情、治愈，多用 Emoji ✨🌟。
-        * **任务**：从心理学角度解读。视命盘为“心灵地图”。安慰用户，提供情绪价值。
         
-        【用户档案】
-        姓名：${ctx.name} | 八字：${ctx.baziString} | 能量：${ctx.wuxingDetail}`
+        ### 🎭 角色定义：Alice林
+        你是一位结合荣格心理学与现代占星/八字的咨询师。你把命盘看作潜意识的地图。
+        
+        **语言风格**：
+        - 温暖、治愈、有同理心，像知心姐姐。
+        - 适当使用 Emoji (✨🌟🔮)，但不要过滥。
+        - 将命理术语转化为心理学术语（例：七杀→攻击性/驱动力；伤官→创造力/叛逆）。
+        
+        **推演逻辑**：
+        1. **共情连接**：先接纳用户的情绪。
+        2. **能量转化**：结合【当前时间：${ctx.currentTime}】的五行能量，分析它如何影响用户的情绪（焦虑、低落或亢奋）。
+        3. **行动指南**：给出具体的、生活化的建议（如：去运动、整理房间、冥想）。
+        
+        **当前任务**：
+        ${ctx.name} 的能量场配置是：${ctx.wuxingDetail}。
+        现在是 **${ctx.currentTime}**，请为Ta提供情绪价值和心理指引。
+        `
     },
     { 
         id: 'all', name: '四师会审', icon: 'fa-users', desc: '天机阁 · 联合推演',
         systemPrompt: (ctx) => `
         ${BASE_RULES}
-        ## 🎭 场景：天机阁四师会审
-        你现在是【天机阁阁主】，负责记录四位大师的激烈辩论。
         
-        **交互规则**：
-        1. 必须输出 **HTML 格式** 的名字，以便区分颜色。
-        2. 大师之间要有**冲突**（铁口刘怼Alice，玄机子讲逻辑，清虚讲平衡）。
-        3. 阁主总结要像“判词”，不要像AI总结。
+        ### 🎭 场景定义：天机阁四师会审
+        你现在是【天机阁阁主】，负责记录四位风格迥异的大师对用户命盘的激烈辩论。
         
-        **输出格式模板** (请严格按此HTML结构输出对话)：
+        **基本信息**：
+        - 用户：${ctx.name} (${ctx.gender})
+        - 八字：${ctx.baziString}
+        - 核心：${ctx.ziweiSummary}
+        - **当前参考时间**：${ctx.currentTime} (所有大师必须基于此时间点讨论)
         
-        > **用户资料卡**：
-        > 姓名：${ctx.name} (${ctx.gender})
-        > 八字：${ctx.baziString}
-        > 核心格局：${ctx.ziweiSummary}
+        **输出规则**：
+        1. **必须HTML着色**：严格使用以下span标签包裹名字。
+           - <span style="color:#4f46e5; font-weight:bold;">清虚道长</span> (宏观/平衡)
+           - <span style="color:#b91c1c; font-weight:bold;">铁口刘</span> (泼冷水/直断)
+           - <span style="color:#d946ef; font-weight:bold;">Alice林</span> (打圆场/心理)
+           - <span style="color:#0891b2; font-weight:bold;">玄机子</span> (理智/纠正逻辑)
         
-        ---
+        2. **剧本结构**：
+           - **起**：清虚道长先引出话题。
+           - **承**：铁口刘必须反驳或说出难听的实话。
+           - **转**：Alice林试图从心理角度软化，玄机子摆出数据定论。
+           - **合**：阁主（你）做最后总结。
         
-        <span style="color:#4f46e5; font-weight:bold;">清虚道长</span>：[文言风格开场]...
+        3. **内容要求**：
+           - 大师之间必须有**冲突**和**互动**（例如铁口刘嘲笑Alice太天真）。
+           - 阁主总结必须是一段高水平的判词，给出最终行动建议。
         
-        <span style="color:#b91c1c; font-weight:bold;">铁口刘</span>：[打断/反驳]...
-        
-        <span style="color:#d946ef; font-weight:bold;">Alice林</span>：[温柔介入 ✨]...
-        
-        <span style="color:#0891b2; font-weight:bold;">玄机子</span>：[冷冷指出因果]...
-        
-        (继续简短交锋...)
-        
-        ---
-        
-        **🔮 阁主结案**
-        
-        [一段有深度、有文采的判词，综合各方观点，给出最终行动建议。不要用列表，用自然段落。重点部分用**加粗**高亮。]
+        请开始表演。
         `
     }
 ];
@@ -536,7 +613,6 @@ createApp({
             model: localStorage.getItem('dc_model') || 'gpt-4o'
         });
 
-        // Initialize user input with default full data
         const userInput = reactive({ name: '', gender: 'male', date: '', time: 12, province: '北京市', city: CHINA_AREA_DATA['北京市'][0] });
         const chartData = reactive({ name: '', gender: '', baziString: '', trueSolarTime: '', wuxingDetail: '', ziweiSummary: '', sihua: '' });
         
@@ -545,6 +621,15 @@ createApp({
 
         const availableCities = computed(() => CHINA_AREA_DATA[userInput.province] || []);
         const handleProvinceChange = () => { if (CHINA_AREA_DATA[userInput.province]) userInput.city = CHINA_AREA_DATA[userInput.province][0]; };
+
+        // 消息时间格式化 helper
+        const formatMsgTime = (ts) => {
+            if (!ts) return '';
+            const d = new Date(ts);
+            const hours = d.getHours().toString().padStart(2, '0');
+            const minutes = d.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
 
         onMounted(() => {
             const savedSessions = localStorage.getItem('dc_sessions');
@@ -562,11 +647,15 @@ createApp({
 
         const saveSession = () => {
             if (!currentSessionId.value) return;
+            // 摘要不包含系统事件消息
+            const validHistory = chatHistory.value.filter(m => m.role !== 'event'); 
+            const summary = validHistory.length > 1 ? validHistory[1].content.slice(0, 50) + '...' : '新会话';
+            
             const sessionData = {
                 id: currentSessionId.value,
                 timestamp: Date.now(),
                 name: userInput.name || '有缘人',
-                summary: chatHistory.value.length > 1 ? chatHistory.value[1].content.slice(0, 50) + '...' : '新会话',
+                summary: summary,
                 userInput: { ...userInput },
                 chartData: { ...chartData },
                 chatHistory: chatHistory.value,
@@ -618,15 +707,16 @@ createApp({
             chatHistory.value = [];
             
             const welcomeMsg = currentPersona.value.id === 'all' 
-                ? `众妙之门已开。请施主出题，我等四人将为你联合推演。`
-                : `${currentPersona.value.name}已就位。观缘主命盘，${chartData.baziString}。有何困惑？`;
+                ? `众妙之门已开。请施主出题。`
+                : `${currentPersona.value.name}已就位。观缘主命盘，${chartData.baziString}。`;
 
             chatHistory.value.push({
                 role: 'assistant',
                 content: welcomeMsg,
                 name: currentPersona.value.name,
                 icon: currentPersona.value.icon,
-                desc: currentPersona.value.desc
+                desc: currentPersona.value.desc,
+                timestamp: Date.now()
             });
             saveSession();
         };
@@ -650,6 +740,7 @@ createApp({
             localStorage.setItem('dc_sessions', JSON.stringify(sessions.value));
             if (currentSessionId.value === id) {
                 currentSessionId.value = null;
+                chartGenerated.value = false;
             }
         };
 
@@ -664,12 +755,11 @@ createApp({
 
         const switchPersona = (id) => {
             currentPersonaId.value = id;
+            // 使用 'event' 类型代替气泡，实现拍一拍效果
             chatHistory.value.push({
-                role: 'assistant',
-                content: `${currentPersona.value.name}已接手。`,
-                name: currentPersona.value.name,
-                icon: currentPersona.value.icon,
-                desc: currentPersona.value.desc
+                role: 'event', 
+                content: `已切换至 ${currentPersona.value.name}`,
+                timestamp: Date.now()
             });
             nextTick(scrollToBottom);
         };
@@ -680,12 +770,17 @@ createApp({
 
             const text = userMessage.value;
             userMessage.value = '';
-            chatHistory.value.push({ role: 'user', content: text });
+            
+            // 记录用户消息，带时间戳
+            chatHistory.value.push({ role: 'user', content: text, timestamp: Date.now() });
             scrollToBottom();
 
             isLoading.value = true;
             const llm = new LLMService(settings);
 
+            // 获取毫秒级系统时间
+            const nowTimeStr = new Date().toLocaleString('zh-CN', { hour12: false });
+            
             const contextData = {
                 name: chartData.name,
                 gender: chartData.gender,
@@ -693,14 +788,25 @@ createApp({
                 trueSolarTime: chartData.trueSolarTime,
                 wuxingDetail: chartData.wuxingDetail,
                 ziweiSummary: chartData.ziweiSummary,
-                sihua: chartData.sihua
+                sihua: chartData.sihua,
+                currentTime: nowTimeStr // 注入 Prompt 
             };
 
             const systemPrompt = currentPersona.value.systemPrompt(contextData);
+            
+            // 构建消息队列，过滤掉 'event' 类型的系统通知
             const messages = [
                 { role: 'system', content: systemPrompt },
-                ...chatHistory.value.filter(m => m.role !== 'system').slice(-10).map(m => ({ role: m.role, content: m.content }))
+                ...chatHistory.value
+                    .filter(m => m.role === 'user' || m.role === 'assistant')
+                    .slice(-10)
+                    .map(m => ({ role: m.role, content: m.content }))
             ];
+            
+            // 额外的一层保障：在用户最新一条消息后隐式追加时间 (Prompt Trick)
+            if(messages.length > 0 && messages[messages.length-1].role === 'user') {
+                messages[messages.length-1].content += `\n(系统自动注入时间戳: ${nowTimeStr})`;
+            }
 
             const aiMsg = reactive({
                 role: 'assistant',
@@ -708,6 +814,7 @@ createApp({
                 name: currentPersona.value.name,
                 icon: currentPersona.value.icon,
                 desc: currentPersona.value.desc,
+                timestamp: Date.now(),
                 isTyping: true
             });
             chatHistory.value.push(aiMsg);
@@ -757,12 +864,10 @@ createApp({
             userMessage, chatHistory, chatRef, sessions, sortedSessions,
             currentPersonaId, currentPersona,
             generateChart, switchPersona, handleSend, runTest, saveSettings, renderMarkdown,
-            loadSession, deleteSession, formatDate, returnToHome
+            loadSession, deleteSession, formatDate, returnToHome, formatMsgTime
         };
     }
 }).mount('#app');
 </script>
 </body>
 </html>
-
-
